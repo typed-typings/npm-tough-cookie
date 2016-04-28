@@ -401,7 +401,7 @@ export class CookieJar {
    * Synchronous version of setCookie; only works with synchronous stores
    * (e.g. the default MemoryCookieStore).
    */
-  setCookieSync (cookieOrString: string | Cookie, currentUrl: string, options?: SetCookieOptions): void;
+  setCookieSync (cookieOrString: string | Cookie, currentUrl: string, options?: SetCookieOptions): Cookie;
 
   /**
    * Retrieve the list of cookies that can be sent in a Cookie header for the current url.

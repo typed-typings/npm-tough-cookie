@@ -1,4 +1,5 @@
 {
   "name": "tough-cookie",
+  "version": "^2.2.0",
   "main": "lib/cookie.d.ts"
 }

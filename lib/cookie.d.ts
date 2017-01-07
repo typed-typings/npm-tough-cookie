@@ -120,6 +120,86 @@ export class Store {
 export class MemoryCookieStore extends Store {}
 
 /**
+ * Interface for the options of the Cookie constructor
+ */
+export interface CookieConstructorOptions {
+  /**
+   * the name or key of the cookie (default "")
+   */
+  key?: string;
+
+  /**
+   * the value of the cookie (default "")
+   */
+  value?: string;
+
+  /**
+   * if set, the Expires= attribute of the cookie (defaults to the string "Infinity").
+   * See setExpires()
+   */
+  expires?: Date;
+
+  /**
+   * (seconds) if set, the Max-Age= attribute in seconds of the cookie. May also
+   * be set to strings "Infinity" and "-Infinity" for non-expiry and immediate-expiry,
+   * respectively. See setMaxAge()
+   */
+  maxAge?: number;
+
+  /**
+   * the Domain= attribute of the cookie
+   */
+  domain?: string;
+
+  /**
+   * the Path= of the cookie
+   */
+  path?: string;
+
+  /**
+   * the Secure cookie flag
+   */
+  secure?: boolean;
+
+  /**
+   * the HttpOnly cookie flag
+   */
+  httpOnly?: boolean;
+
+  /**
+   * any unrecognized cookie attributes as strings (even if equal-signs inside)
+   */
+  extensions?: string[];
+
+  /**
+   * when this cookie was constructed
+   */
+  creation?: Date;
+
+  /**
+   * set at construction, used to provide greater sort precision
+   * (please see cookieCompare(a,b) for a full explanation)
+   */
+  creationIndex?: number;
+
+  /**
+   * is this a host-only cookie (i.e. no Domain field was set, but was instead implied)
+   */
+  hostOnly?: boolean;
+
+  /**
+   * if true, there was no Path field on the cookie and defaultPath() was used to derive one.
+   */
+  pathIsDefault?: boolean;
+
+  /**
+   * last time the cookie got accessed. Will affect cookie cleaning once
+   * implemented. Using cookiejar.getCookies(...) will update this attribute.
+   */
+  lastAccessed?: Date;
+}
+
+/**
  * Exported via tough.Cookie.
  */
 export class Cookie {
@@ -228,6 +308,12 @@ export class Cookie {
    * encode to a Cookie header value (i.e. the .key and .value properties joined with '=').
    */
   cookieString (): string;
+
+  /**
+   * Receives an options object that can contain any of the above Cookie properties, uses the
+   * default for unspecified properties.
+   */
+  constructor (options?: CookieConstructorOptions);
 
   /**
    * sets the expiry based on a date-string passed through parseDate(). If parseDate

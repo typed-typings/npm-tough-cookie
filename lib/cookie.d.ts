@@ -108,8 +108,92 @@ export function permutePath (path: string): string[];
  * Base class for CookieJar stores. Available as tough.Store.
  */
 export class Store {
-  // TODO(blakeembrey): Finish this.
-  // https://github.com/SalesforceEng/tough-cookie#store
+  /**
+   * Retrieve a cookie with the given domain, path and key (a.k.a. name).
+   * The RFC maintains that exactly one of these cookies should exist in a store. If the store is using versioning,
+   * this means that the latest/newest such cookie should be returned.
+   *
+   * Callback takes an error and the resulting Cookie object.
+   * If no cookie is found then null MUST be passed instead (i.e. not an error).
+   */
+  findCookie (domain: string, path: string, key: string, cb: (error: Error, cookie: Cookie) => any): void;
+
+  /**
+   * Locates cookies matching the given domain and path. This is most often called in the context of
+   * cookiejar.getCookies() above.
+   *
+   * If no cookies are found, the callback MUST be passed an empty array.
+   *
+   * The resulting list will be checked for applicability to the current request according to the RFC (domain-match,
+   * path-match, http-only-flag, secure-flag, expiry, etc.), so it's OK to use an optimistic search algorithm when
+   * implementing this method. However, the search algorithm used SHOULD try to find cookies that domainMatch()
+   * the domain and pathMatch() the path in order to limit the amount of checking that needs to be done.
+   *
+   * As of version 0.9.12, the allPaths option to cookiejar.getCookies() above will cause the path here to be null.
+   * If the path is null, path-matching MUST NOT be performed (i.e. domain-matching only).
+   */
+  findCookies (domain: string, path: string, cb: (error: Error, cookies: Cookie[]) => any): void;
+
+  /**
+   * Adds a new cookie to the store. The implementation SHOULD replace any existing cookie with the same .domain,
+   * .path, and .key properties -- depending on the nature of the implementation, it's possible that between the call
+   * to fetchCookie and putCookie that a duplicate putCookie can occur.
+   *
+   * The cookie object MUST NOT be modified; the caller will have already updated the .creation and .lastAccessed
+   * properties.
+   *
+   * Pass an error if the cookie cannot be stored.
+   */
+  putCookie (cookie: Cookie, cb: (error: Error) => any): void;
+
+  /**
+   * Update an existing cookie. The implementation MUST update the .value for a cookie with the same domain, .path
+   * and .key. The implementation SHOULD check that the old value in the store is equivalent to oldCookie - how
+   * the conflict is resolved is up to the store.
+   *
+   * The .lastAccessed property will always be different between the two objects (to the precision possible via
+   * JavaScript's clock). Both .creation and .creationIndex are guaranteed to be the same. Stores MAY ignore or
+   * defer the .lastAccessed change at the cost of affecting how cookies are selected for automatic deletion
+   * (e.g., least-recently-used, which is up to the store to implement).
+   *
+   * Stores may wish to optimize changing the .value of the cookie in the store versus storing a new cookie.
+   * If the implementation doesn't define this method a stub that calls putCookie(newCookie,cb) will be added to
+   * the store object.
+   *
+   * The newCookie and oldCookie objects MUST NOT be modified.
+   *
+   * Pass an error if the newCookie cannot be stored.
+   */
+  updateCookie (oldCookie: Cookie, newCookie: Cookie, cb: (error: Error) => any): void;
+
+  /**
+   * Remove a cookie from the store (see notes on findCookie about the uniqueness constraint).
+   *
+   * The implementation MUST NOT pass an error if the cookie doesn't exist; only pass an error due to the failure
+   * to remove an existing cookie.
+   */
+  removeCookie (domain: string, path: string, key: string, cb: (error: Error) => any): void;
+
+  /**
+   * Removes matching cookies from the store. The path parameter is optional, and if missing means all paths in
+   * a domain should be removed.
+   *
+   * Pass an error ONLY if removing any existing cookies failed.
+   */
+  removeCookies (domain: string, path: string, cb: (error: Error) => any): void;
+
+  /**
+   * Produces an Array of all cookies during jar.serialize(). The items in the array can be true Cookie objects or
+   * generic Objects with the [Serialization Format] data structure.
+   *
+   * Cookies SHOULD be returned in creation order to preserve sorting via compareCookies(). For reference,
+   * MemoryCookieStore will sort by .creationIndex since it uses true Cookie objects internally. If you don't
+   * return the cookies in creation order, they'll still be sorted by creation time, but this only has a precision
+   * of 1ms. See compareCookies for more detail.
+   *
+   * Pass an error if retrieval fails.
+   */
+  getAllCookies (cb: (error: Error, cookies: Cookie[]) => any): void;
 }
 
 /**
@@ -118,86 +202,6 @@ export class Store {
  * synchronous and asynchronous forms of the CookieJar API.
  */
 export class MemoryCookieStore extends Store {}
-
-/**
- * Interface for the options of the Cookie constructor
- */
-export interface CookieConstructorOptions {
-  /**
-   * the name or key of the cookie (default "")
-   */
-  key?: string;
-
-  /**
-   * the value of the cookie (default "")
-   */
-  value?: string;
-
-  /**
-   * if set, the Expires= attribute of the cookie (defaults to the string "Infinity").
-   * See setExpires()
-   */
-  expires?: Date;
-
-  /**
-   * (seconds) if set, the Max-Age= attribute in seconds of the cookie. May also
-   * be set to strings "Infinity" and "-Infinity" for non-expiry and immediate-expiry,
-   * respectively. See setMaxAge()
-   */
-  maxAge?: number;
-
-  /**
-   * the Domain= attribute of the cookie
-   */
-  domain?: string;
-
-  /**
-   * the Path= of the cookie
-   */
-  path?: string;
-
-  /**
-   * the Secure cookie flag
-   */
-  secure?: boolean;
-
-  /**
-   * the HttpOnly cookie flag
-   */
-  httpOnly?: boolean;
-
-  /**
-   * any unrecognized cookie attributes as strings (even if equal-signs inside)
-   */
-  extensions?: string[];
-
-  /**
-   * when this cookie was constructed
-   */
-  creation?: Date;
-
-  /**
-   * set at construction, used to provide greater sort precision
-   * (please see cookieCompare(a,b) for a full explanation)
-   */
-  creationIndex?: number;
-
-  /**
-   * is this a host-only cookie (i.e. no Domain field was set, but was instead implied)
-   */
-  hostOnly?: boolean;
-
-  /**
-   * if true, there was no Path field on the cookie and defaultPath() was used to derive one.
-   */
-  pathIsDefault?: boolean;
-
-  /**
-   * last time the cookie got accessed. Will affect cookie cleaning once
-   * implemented. Using cookiejar.getCookies(...) will update this attribute.
-   */
-  lastAccessed?: Date;
-}
 
 /**
  * Exported via tough.Cookie.
@@ -313,7 +317,7 @@ export class Cookie {
    * Receives an options object that can contain any of the above Cookie properties, uses the
    * default for unspecified properties.
    */
-  constructor (options?: CookieConstructorOptions);
+  constructor (options?: Partial<Cookie>);
 
   /**
    * sets the expiry based on a date-string passed through parseDate(). If parseDate
@@ -389,6 +393,22 @@ export class Cookie {
    * Does a deep clone of this cookie, exactly implemented as Cookie.fromJSON(cookie.toJSON()).
    */
   clone (): Cookie;
+
+  /**
+   * Status: IN PROGRESS. Works for a few things, but is by no means comprehensive.
+   *
+   * validates cookie attributes for semantic correctness. Useful for "lint" checking any Set-Cookie headers you
+   * generate. For now, it returns a boolean, but eventually could return a reason string -- you can future-proof with
+   * this construct:
+   * ```
+   * if (cookie.validate() === true) {
+   *   // it's tasty
+   * } else {
+   *   // yuck!
+   * }
+   * ```
+   */
+  validate (): boolean;
 }
 
 export interface CookieParseOptions {
@@ -451,18 +471,18 @@ export interface GetCookieOptions {
   allPaths?: boolean;
 }
 
-export interface CookieJarOptions {
+export interface CookieJarConstructorOptions {
   /**
    * default true - reject cookies with domains like "com" and "co.uk"
    */
-  rejectPublicSuffixes: boolean;
+  rejectPublicSuffixes?: boolean;
 
   /**
    * default false - accept malformed cookies like bar and =bar, which have an
    * implied empty name. This is not in the standard, but is used sometimes
    * on the web and is accepted by (most) browsers.
    */
-  looseMode: boolean;
+  looseMode?: boolean;
 }
 
 /**
@@ -470,10 +490,11 @@ export interface CookieJarOptions {
  * to the constructor otherwise a MemoryCookieStore will be created and used.
  */
 export class CookieJar {
+  store: Store;
   enableLooseMode: boolean;
   rejectPublicSuffixes: boolean;
 
-  constructor (store?: Store, options?: boolean | CookieJarOptions);
+  constructor (store?: Store, options?: boolean | CookieJarConstructorOptions);
 
   /**
    * Attempt to set the cookie in the cookie jar. If the operation fails, an
@@ -518,6 +539,19 @@ export class CookieJar {
    * (e.g. the default MemoryCookieStore).
    */
   getCookieStringSync (currentUrl: string, options?: GetCookieOptions): string;
+
+  /**
+   * Returns an array of strings suitable for Set-Cookie headers. Accepts the same options as .getCookies().
+   * Simply maps the cookie array via .toString().
+   */
+  getSetCookieStrings (currentUrl: string, cb: (err: Error, cookies?: string[]) => any): void;
+  getSetCookieStrings (currentUrl: string, options: GetCookieOptions, cb: (err: Error, cookies?: string[]) => any): void;
+
+  /**
+   * Synchronous version of getSetCookieStrings; only works with synchronous stores
+   * (e.g. the default MemoryCookieStore).
+   */
+  getSetCookieStringsSync (currentUrl: string, options?: GetCookieOptions): string[];
 
   /**
    * Serialize the Jar if the underlying store supports .getAllCookies.

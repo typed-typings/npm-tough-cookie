@@ -116,7 +116,7 @@ export class Store {
    * Callback takes an error and the resulting Cookie object.
    * If no cookie is found then null MUST be passed instead (i.e. not an error).
    */
-  findCookie (domain: string, path: string, key: string, cb: (error: Error, cookie: Cookie) => any): any;
+  findCookie (domain: string, path: string, key: string, cb: (error: Error, cookie: Cookie) => any): void;
 
   /**
    * Locates cookies matching the given domain and path. This is most often called in the context of
@@ -180,7 +180,7 @@ export class Store {
    *
    * Pass an error ONLY if removing any existing cookies failed.
    */
-  removeCookies (domain: string, path: string, cb: (error: Error) => any): any;
+  removeCookies (domain: string, path: string, cb: (error: Error) => any): void;
 
   /**
    * Produces an Array of all cookies during jar.serialize(). The items in the array can be true Cookie objects or

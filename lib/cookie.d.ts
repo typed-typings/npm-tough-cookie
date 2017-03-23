@@ -387,18 +387,18 @@ export interface GetCookieOptions {
   allPaths?: boolean;
 }
 
-export interface CookieJarOptions {
+export interface CookieJarConstructorOptions {
   /**
    * default true - reject cookies with domains like "com" and "co.uk"
    */
-  rejectPublicSuffixes: boolean;
+  rejectPublicSuffixes?: boolean;
 
   /**
    * default false - accept malformed cookies like bar and =bar, which have an
    * implied empty name. This is not in the standard, but is used sometimes
    * on the web and is accepted by (most) browsers.
    */
-  looseMode: boolean;
+  looseMode?: boolean;
 }
 
 /**
@@ -406,10 +406,11 @@ export interface CookieJarOptions {
  * to the constructor otherwise a MemoryCookieStore will be created and used.
  */
 export class CookieJar {
+  store: Store;
   enableLooseMode: boolean;
   rejectPublicSuffixes: boolean;
 
-  constructor (store?: Store, options?: boolean | CookieJarOptions);
+  constructor (store?: Store, options?: boolean | CookieJarConstructorOptions);
 
   /**
    * Attempt to set the cookie in the cookie jar. If the operation fails, an

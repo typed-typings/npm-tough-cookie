@@ -400,13 +400,13 @@ export class Cookie {
    * validates cookie attributes for semantic correctness. Useful for "lint" checking any Set-Cookie headers you
    * generate. For now, it returns a boolean, but eventually could return a reason string -- you can future-proof with
    * this construct:
-   * <pre><code>
+   * ```
    * if (cookie.validate() === true) {
    *   // it's tasty
    * } else {
    *   // yuck!
    * }
-   * </code></pre>
+   * ```
    */
   validate (): boolean;
 }

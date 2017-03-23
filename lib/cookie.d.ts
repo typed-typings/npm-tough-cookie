@@ -457,6 +457,19 @@ export class CookieJar {
   getCookieStringSync (currentUrl: string, options?: GetCookieOptions): string;
 
   /**
+   * Returns an array of strings suitable for Set-Cookie headers. Accepts the same options as .getCookies().
+   * Simply maps the cookie array via .toString().
+   */
+  getSetCookieStrings (currentUrl: string, cb: (err: Error, cookies?: string[]) => any): void;
+  getSetCookieStrings (currentUrl: string, options: GetCookieOptions, cb: (err: Error, cookies?: string[]) => any): void;
+
+  /**
+   * Synchronous version of getSetCookieStrings; only works with synchronous stores
+   * (e.g. the default MemoryCookieStore).
+   */
+  getSetCookieStringsSync (currentUrl: string, options?: GetCookieOptions): string[];
+
+  /**
    * Serialize the Jar if the underlying store supports .getAllCookies.
    *
    * NOTE: Custom Cookie properties will be discarded. If you want a property

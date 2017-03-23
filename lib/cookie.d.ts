@@ -108,8 +108,92 @@ export function permutePath (path: string): string[];
  * Base class for CookieJar stores. Available as tough.Store.
  */
 export class Store {
-  // TODO(blakeembrey): Finish this.
-  // https://github.com/SalesforceEng/tough-cookie#store
+  /**
+   * Retrieve a cookie with the given domain, path and key (a.k.a. name).
+   * The RFC maintains that exactly one of these cookies should exist in a store. If the store is using versioning,
+   * this means that the latest/newest such cookie should be returned.
+   *
+   * Callback takes an error and the resulting Cookie object.
+   * If no cookie is found then null MUST be passed instead (i.e. not an error).
+   */
+  findCookie(domain: string, path: string, key: string, cb: (error: Error, cookie: Cookie) => any): any;
+
+  /**
+   * Locates cookies matching the given domain and path. This is most often called in the context of
+   * cookiejar.getCookies() above.
+   *
+   * If no cookies are found, the callback MUST be passed an empty array.
+   *
+   * The resulting list will be checked for applicability to the current request according to the RFC (domain-match,
+   * path-match, http-only-flag, secure-flag, expiry, etc.), so it's OK to use an optimistic search algorithm when
+   * implementing this method. However, the search algorithm used SHOULD try to find cookies that domainMatch()
+   * the domain and pathMatch() the path in order to limit the amount of checking that needs to be done.
+   *
+   * As of version 0.9.12, the allPaths option to cookiejar.getCookies() above will cause the path here to be null.
+   * If the path is null, path-matching MUST NOT be performed (i.e. domain-matching only).
+   */
+  findCookies(domain: string, path: string, cb: (error: Error, cookies: Cookie[]) => any): void;
+
+  /**
+   * Adds a new cookie to the store. The implementation SHOULD replace any existing cookie with the same .domain,
+   * .path, and .key properties -- depending on the nature of the implementation, it's possible that between the call
+   * to fetchCookie and putCookie that a duplicate putCookie can occur.
+   *
+   * The cookie object MUST NOT be modified; the caller will have already updated the .creation and .lastAccessed
+   * properties.
+   *
+   * Pass an error if the cookie cannot be stored.
+   */
+  putCookie(cookie: Cookie, cb: (error: Error) => any): void;
+
+  /**
+   * Update an existing cookie. The implementation MUST update the .value for a cookie with the same domain, .path
+   * and .key. The implementation SHOULD check that the old value in the store is equivalent to oldCookie - how
+   * the conflict is resolved is up to the store.
+   *
+   * The .lastAccessed property will always be different between the two objects (to the precision possible via
+   * JavaScript's clock). Both .creation and .creationIndex are guaranteed to be the same. Stores MAY ignore or
+   * defer the .lastAccessed change at the cost of affecting how cookies are selected for automatic deletion
+   * (e.g., least-recently-used, which is up to the store to implement).
+   *
+   * Stores may wish to optimize changing the .value of the cookie in the store versus storing a new cookie.
+   * If the implementation doesn't define this method a stub that calls putCookie(newCookie,cb) will be added to
+   * the store object.
+   *
+   * The newCookie and oldCookie objects MUST NOT be modified.
+   *
+   * Pass an error if the newCookie cannot be stored.
+   */
+  updateCookie(oldCookie: Cookie, newCookie: Cookie, cb: (error: Error) => any): void;
+
+  /**
+   * Remove a cookie from the store (see notes on findCookie about the uniqueness constraint).
+   *
+   * The implementation MUST NOT pass an error if the cookie doesn't exist; only pass an error due to the failure
+   * to remove an existing cookie.
+   */
+  removeCookie(domain: string, path: string, key: string, cb: (error: Error) => any): void;
+
+  /**
+   * Removes matching cookies from the store. The path parameter is optional, and if missing means all paths in
+   * a domain should be removed.
+   *
+   * Pass an error ONLY if removing any existing cookies failed.
+   */
+  removeCookies(domain: string, path: string, cb: (error: Error) => any): any;
+
+  /**
+   * Produces an Array of all cookies during jar.serialize(). The items in the array can be true Cookie objects or
+   * generic Objects with the [Serialization Format] data structure.
+   *
+   * Cookies SHOULD be returned in creation order to preserve sorting via compareCookies(). For reference,
+   * MemoryCookieStore will sort by .creationIndex since it uses true Cookie objects internally. If you don't
+   * return the cookies in creation order, they'll still be sorted by creation time, but this only has a precision
+   * of 1ms. See compareCookies for more detail.
+   *
+   * Pass an error if retrieval fails.
+   */
+  getAllCookies(cb: (error: Error, cookies: Cookie[]) => any): void;
 }
 
 /**
@@ -324,7 +408,7 @@ export class Cookie {
    * }
    * </code></pre>
    */
-   validate (): boolean;
+  validate (): boolean;
 }
 
 export interface CookieParseOptions {

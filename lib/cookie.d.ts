@@ -116,7 +116,7 @@ export class Store {
    * Callback takes an error and the resulting Cookie object.
    * If no cookie is found then null MUST be passed instead (i.e. not an error).
    */
-  findCookie(domain: string, path: string, key: string, cb: (error: Error, cookie: Cookie) => any): any;
+  findCookie (domain: string, path: string, key: string, cb: (error: Error, cookie: Cookie) => any): any;
 
   /**
    * Locates cookies matching the given domain and path. This is most often called in the context of
@@ -132,7 +132,7 @@ export class Store {
    * As of version 0.9.12, the allPaths option to cookiejar.getCookies() above will cause the path here to be null.
    * If the path is null, path-matching MUST NOT be performed (i.e. domain-matching only).
    */
-  findCookies(domain: string, path: string, cb: (error: Error, cookies: Cookie[]) => any): void;
+  findCookies (domain: string, path: string, cb: (error: Error, cookies: Cookie[]) => any): void;
 
   /**
    * Adds a new cookie to the store. The implementation SHOULD replace any existing cookie with the same .domain,
@@ -144,7 +144,7 @@ export class Store {
    *
    * Pass an error if the cookie cannot be stored.
    */
-  putCookie(cookie: Cookie, cb: (error: Error) => any): void;
+  putCookie (cookie: Cookie, cb: (error: Error) => any): void;
 
   /**
    * Update an existing cookie. The implementation MUST update the .value for a cookie with the same domain, .path
@@ -164,7 +164,7 @@ export class Store {
    *
    * Pass an error if the newCookie cannot be stored.
    */
-  updateCookie(oldCookie: Cookie, newCookie: Cookie, cb: (error: Error) => any): void;
+  updateCookie (oldCookie: Cookie, newCookie: Cookie, cb: (error: Error) => any): void;
 
   /**
    * Remove a cookie from the store (see notes on findCookie about the uniqueness constraint).
@@ -172,7 +172,7 @@ export class Store {
    * The implementation MUST NOT pass an error if the cookie doesn't exist; only pass an error due to the failure
    * to remove an existing cookie.
    */
-  removeCookie(domain: string, path: string, key: string, cb: (error: Error) => any): void;
+  removeCookie (domain: string, path: string, key: string, cb: (error: Error) => any): void;
 
   /**
    * Removes matching cookies from the store. The path parameter is optional, and if missing means all paths in
@@ -180,7 +180,7 @@ export class Store {
    *
    * Pass an error ONLY if removing any existing cookies failed.
    */
-  removeCookies(domain: string, path: string, cb: (error: Error) => any): any;
+  removeCookies (domain: string, path: string, cb: (error: Error) => any): any;
 
   /**
    * Produces an Array of all cookies during jar.serialize(). The items in the array can be true Cookie objects or
@@ -193,7 +193,7 @@ export class Store {
    *
    * Pass an error if retrieval fails.
    */
-  getAllCookies(cb: (error: Error, cookies: Cookie[]) => any): void;
+  getAllCookies (cb: (error: Error, cookies: Cookie[]) => any): void;
 }
 
 /**
